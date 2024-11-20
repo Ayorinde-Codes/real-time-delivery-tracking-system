@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package user;
+option go_package = "github.com/ayorinde-codes/real-time-delivery-tracking/proto/user";
+
+service UserService {
+  rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse);
+  rpc AuthenticateUser (AuthenticateUserRequest) returns (AuthenticateUserResponse);
+}
+
+message RegisterUserRequest {
+  string name = 1;
+  string email = 2;
+  string role = 3;
+}
+
+message RegisterUserResponse {
+  string message = 1;
+}
+
+message AuthenticateUserRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message AuthenticateUserResponse {
+  string token = 1;
+}
