@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package order;
+option go_package = "github.com/ayorinde-codes/real-time-delivery-tracking/proto/order";
+
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+  rpc GetOrderStatus (GetOrderStatusRequest) returns (GetOrderStatusResponse);
+}
+
+message CreateOrderRequest {
+  int32 customer_id = 1;
+}
+
+message CreateOrderResponse {
+  string message = 1;
+}
+
+message UpdateOrderStatusRequest {
+  int32 order_id = 1;
+  string status = 2;
+}
+
+message UpdateOrderStatusResponse {
+  string message = 1;
+}
+
+message GetOrderStatusRequest {
+  int32 order_id = 1;
+}
+
+message GetOrderStatusResponse {
+  string status = 1;
+}
