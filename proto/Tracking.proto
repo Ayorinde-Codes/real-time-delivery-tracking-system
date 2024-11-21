@@ -6,6 +6,7 @@ option go_package = "github.com/ayorinde-codes/real-time-delivery-tracking/proto
 service TrackingService {
   rpc SendLocationStream (stream LocationRequest) returns (LocationResponse);
   rpc SubscribeLocationUpdates (LocationRequest) returns (stream LocationResponse);
+  rpc TrackOrder (TrackOrderRequest) returns (TrackOrderResponse);
 }
 
 message LocationRequest {
@@ -19,4 +20,13 @@ message LocationResponse {
   float latitude = 2;
   float longitude = 3;
   string message = 4;
+}
+
+message TrackOrderRequest {
+  int32 order_id = 1;
+}
+
+message TrackOrderResponse {
+  int32 order_id = 1;
+  string status = 2;
 }
