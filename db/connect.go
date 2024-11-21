@@ -6,16 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
+	_ "github.com/jackc/pgx/v5/stdlib" // Pgx driver for SQL
 )
 
 func Connect() (*sql.DB, error) {
-
-	err := godotenv.Load("../config/env")
-
-	if err != nil {
-		log.Fatalf("Error loading environment file")
-	}
 
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
@@ -25,5 +19,11 @@ func Connect() (*sql.DB, error) {
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 
-	return sql.Open("pgx", connStr)
+	db, err := sql.Open("pgx", connStr)
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+		return nil, err
+	}
+
+	return db, nil
 }
