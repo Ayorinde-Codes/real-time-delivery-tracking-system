@@ -4,26 +4,29 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
-	_ "github.com/jackc/pgx/v5/stdlib" // Pgx driver for SQL
+	"github.com/ayorinde-codes/real-time-delivery-tracking/config"
+	_ "github.com/jackc/pgx/v5/stdlib" // Import pgx driver
 )
 
-func Connect() (*sql.DB, error) {
+// Connect initializes and returns a database connection
+func Connect(cfg *config.Config) (*sql.DB, error) {
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
+	)
 
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
-
+	// Open a database connection
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
+	// Test the connection
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("error connecting to database: %w", err)
+	}
+
+	log.Println("Database connected successfully!")
 	return db, nil
 }
