@@ -1,8 +1,10 @@
 syntax = "proto3";
 
 package user;
-option go_package = "./user";
+// option go_package = "github.com/ayorinde-codes/real-time-delivery-tracking/proto/user";
+option go_package = "./proto/user";
 
+//service definition
 service UserService {
   rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse);
   rpc AuthenticateUser (AuthenticateUserRequest) returns (AuthenticateUserResponse);

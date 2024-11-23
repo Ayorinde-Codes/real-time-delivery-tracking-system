@@ -1,52 +1,59 @@
-package server
+package service
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-	"log"
 
+	"github.com/ayorinde-codes/real-time-delivery-tracking/models"
 	"github.com/ayorinde-codes/real-time-delivery-tracking/proto/order"
+	"gorm.io/gorm"
 )
 
-type OrderServiceServer struct {
+type OrderService struct {
+	db *gorm.DB
 	order.UnimplementedOrderServiceServer
-	DB *sql.DB
 }
 
-// CreateOrder creates a new order
-func (s *OrderServiceServer) CreateOrder(ctx context.Context, req *order.CreateOrderRequest) (*order.CreateOrderResponse, error) {
-	// Create a new order
-	_, err := s.DB.Exec("INSERT INTO orders (customer_id) VALUES ($1)", req.CustomerId)
-
-	if err != nil {
-		log.Printf("Error creating order: %v", err)
-		return nil, errors.New("Failed to create order")
+// CreateOrder creates a new order.
+func (s *OrderService) CreateOrder(ctx context.Context, req *order.CreateOrderRequest) (*order.CreateOrderResponse, error) {
+	newOrder := models.Order{
+		CustomerID: req.CustomerId,
+		Status:     "Pending",
 	}
-	return &order.CreateOrderResponse{OrderId: 1}, nil
+
+	if err := s.db.Create(&newOrder).Error; err != nil {
+		return nil, err
+	}
+
+	return &order.CreateOrderResponse{
+		Message: "Order created successfully",
+	}, nil
 }
 
-// UpdateOrderStatus updates the status of an order
-func (s *OrderServiceServer) UpdateOrderStatus(ctx context.Context, req *order.UpdateOrderStatusRequest) (*order.UpdateOrderStatusResponse, error) {
-
-	// Update the status of the order
-	_, err := s.DB.Exec("UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2", req.Status, req.OrderId)
-	if err != nil {
-		log.Printf("Error updating order status: %v", err)
-		return nil, errors.New("Failed to update order status")
+// UpdateOrderStatus updates the status of an order.
+func (s *OrderService) UpdateOrderStatus(ctx context.Context, req *order.UpdateOrderStatusRequest) (*order.UpdateOrderStatusResponse, error) {
+	var existingOrder models.Order
+	if err := s.db.First(&existingOrder, req.OrderId).Error; err != nil {
+		return nil, err
 	}
 
-	return &order.UpdateOrderStatusResponse{Message: "Order status updated successfully!"}, nil
+	existingOrder.Status = req.Status
+	if err := s.db.Save(&existingOrder).Error; err != nil {
+		return nil, err
+	}
+
+	return &order.UpdateOrderStatusResponse{
+		Message: "Order status updated successfully",
+	}, nil
 }
 
-// GetOrderStatus retrieves the status of an order
-func (s *OrderServiceServer) GetOrderStatus(ctx context.Context, req *order.GetOrderStatusRequest) (*order.GetOrderStatusResponse, error) {
-
-	var status string
-	err := s.DB.QueryRow("SELECT status FROM orders where id = $1", req.OrderId).Scan(&status)
-	if err != nil {
-		log.Printf("Error retrieving order status: %v", err)
-		return nil, errors.New("Failed to get order status")
+// GetOrderStatus retrieves the status of an order.
+func (s *OrderService) GetOrderStatus(ctx context.Context, req *order.GetOrderStatusRequest) (*order.GetOrderStatusResponse, error) {
+	var existingOrder models.Order
+	if err := s.db.First(&existingOrder, req.OrderId).Error; err != nil {
+		return nil, err
 	}
-	return &order.GetOrderStatusResponse{Status: status}, nil
+
+	return &order.GetOrderStatusResponse{
+		Status: existingOrder.Status,
+	}, nil
 }

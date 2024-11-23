@@ -14,30 +14,23 @@ type Config struct {
 	DBHost     string
 	DBPort     string
 	AppPort    string
+	JWTKey     string
 }
 
-// LoadConfig initializes and returns the application configuration
+// LoadConfig initializes the application configuration
 func LoadConfig() *Config {
-	// Load environment variables from the `.env` file
-	err := godotenv.Load("../config/env") // Update this path if needed
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("Warning: .env file not found, falling back to environment variables")
+		log.Println("Warning: .env file not found, using environment variables")
 	}
 
 	return &Config{
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "secret"),
-		DBName:     getEnv("DB_NAME", "real_time_tracking"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		AppPort:    getEnv("APP_PORT", "8080"),
+		DBUser:     os.Getenv("DB_USER"),
+		DBPassword: os.Getenv("DB_PASSWORD"),
+		DBName:     os.Getenv("DB_NAME"),
+		DBHost:     os.Getenv("DB_HOST"),
+		DBPort:     os.Getenv("DB_PORT"),
+		AppPort:    os.Getenv("APP_PORT"),
+		JWTKey:     os.Getenv("JWT_KEY"),
 	}
-}
-
-// getEnv retrieves environment variables or returns a default value if not set
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
 }

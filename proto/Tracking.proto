@@ -1,32 +1,46 @@
 syntax = "proto3";
 
 package tracking;
-option go_package = "./tracking";
+// option go_package = "github.com/ayorinde-codes/real-time-delivery-tracking/proto/tracking";
+option go_package = "./proto/tracking";
 
+import "google/protobuf/timestamp.proto";
+
+// TrackingService provides real-time tracking and location updates.
 service TrackingService {
-  rpc SendLocationStream (stream LocationRequest) returns (LocationResponse);
-  rpc SubscribeLocationUpdates (LocationRequest) returns (stream LocationResponse);
-  rpc TrackOrder (TrackOrderRequest) returns (TrackOrderResponse);
+    // Sends a stream of location updates for an order.
+    rpc SendLocationStream (stream LocationRequest) returns (LocationResponse);
+
+    // Subscribes to location updates for a specific order.
+    rpc SubscribeLocationUpdates (LocationRequest) returns (stream LocationResponse);
+
+    // Retrieves the latest status of an order.
+    rpc TrackOrder (TrackOrderRequest) returns (TrackOrderResponse);
 }
 
+// Represents a location update request.
 message LocationRequest {
-  int32 order_id = 1;
-  float latitude = 2;
-  float longitude = 3;
+    int32 order_id = 1;
+    float latitude = 2;
+    float longitude = 3;
 }
 
+// Represents a response containing location data or a status message.
 message LocationResponse {
-  int32 order_id = 1;
-  float latitude = 2;
-  float longitude = 3;
-  string message = 4;
+    int32 order_id = 1;
+    float latitude = 2;
+    float longitude = 3;
+    string message = 4;
+    google.protobuf.Timestamp timestamp = 5; // Optional: Time of the update
 }
 
+// Represents a request to track an order's status.
 message TrackOrderRequest {
-  int32 order_id = 1;
+    int32 order_id = 1;
 }
 
+// Represents a response containing the order's status.
 message TrackOrderResponse {
-  int32 order_id = 1;
-  string status = 2;
+    int32 order_id = 1;
+    string status = 2;
 }

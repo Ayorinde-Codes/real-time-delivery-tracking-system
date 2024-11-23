@@ -1,32 +1,30 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/ayorinde-codes/real-time-delivery-tracking/config"
-	_ "github.com/jackc/pgx/v5/stdlib" // Import pgx driver
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-// Connect initializes and returns a database connection
-func Connect(cfg *config.Config) (*sql.DB, error) {
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
+var DB *gorm.DB
+
+func ConnectDB() {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PORT"),
 	)
 
-	// Open a database connection
-	db, err := sql.Open("pgx", connStr)
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("error opening database: %w", err)
-	}
-
-	// Test the connection
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("error connecting to database: %w", err)
+		log.Fatalf("Could not connect to the database: %v", err)
 	}
 
 	log.Println("Database connected successfully!")
-	return db, nil
 }
