@@ -2,62 +2,83 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"log"
-	"os/user"
 
+	"github.com/ayorinde-codes/real-time-delivery-tracking/models"
 	"github.com/ayorinde-codes/real-time-delivery-tracking/proto/user"
 	"github.com/ayorinde-codes/real-time-delivery-tracking/util"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserServiceServer struct {
+	db *gorm.DB
 	user.UnimplementedUserServiceServer
-	DB *sql.DB
 }
 
 func (s *UserServiceServer) RegisterUser(ctx context.Context, req *user.RegisterUserRequest) (*user.RegisterUserResponse, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, errors.New("Failed to hash password")
+	// Input validation
+	if req.Name == "" || req.Email == "" || req.Password == "" || req.Role == "" {
+		return nil, errors.New("all fields (name, email, password, role) are required")
 	}
 
-	_, err := s.DB.Exec("INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)", req.Name, req.Email, string(hashedPassword), req.Role)
-
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error inserting user: %v", err)
-		return nil, errors.New("Failed to register user")
+		return nil, errors.New("failed to hash password")
 	}
-	return &user.RegisterUserResponse{Message: "User registered successfully"}, nil
+
+	// Create a new user model
+	newUser := models.User{
+		Name:     req.Name,
+		Email:    req.Email,
+		Role:     req.Role,
+		Password: string(hashedPassword),
+	}
+
+	// Save the user in the database
+	if err := s.db.Create(&newUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrUniqueConstraint) {
+			return nil, errors.New("email already exists")
+		}
+		return nil, err
+	}
+
+	return &user.RegisterUserResponse{
+		Message: "User registered successfully",
+	}, nil
 }
 
+// AuthenticateUser handles user authentication and token generation.
 func (s *UserServiceServer) AuthenticateUser(ctx context.Context, req *user.AuthenticateUserRequest) (*user.AuthenticateUserResponse, error) {
-	var id int32
-	var hashedPassword string
+	// Input validation
+	if req.Email == "" || req.Password == "" {
+		return nil, errors.New("email and password are required")
+	}
 
-	// Query the database for the user's details
-	err := s.DB.QueryRow("SELECT id, password FROM users WHERE email = $1", req.Email).Scan(&id, &hashedPassword)
-	if err != nil {
-		if err == sql.ErrNoRows {
+	// Find the user by email
+	var existingUser models.User
+	if err := s.db.Where("email = ?", req.Email).First(&existingUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
-		log.Printf("Error fetching user: %v", err)
-		return nil, errors.New("failed to authenticate user")
+		return nil, err
 	}
 
 	// Verify the password
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password))
-	if err != nil {
-		return nil, errors.New("invalid password")
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(req.Password)); err != nil {
+		return nil, errors.New("invalid credentials")
 	}
 
-	// Generate a JWT token
-	token, err := util.GenerateJWT(id)
+	// Generate JWT token
+	token, err := util.GenerateJWT(existingUser.ID)
 	if err != nil {
 		log.Printf("Error generating token: %v", err)
 		return nil, errors.New("failed to generate token")
 	}
 
-	return &user.AuthenticateUserResponse{Token: token}, nil
+	return &user.AuthenticateUserResponse{
+		Token: token,
+	}, nil
 }

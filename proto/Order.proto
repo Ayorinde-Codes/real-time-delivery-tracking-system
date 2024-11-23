@@ -1,7 +1,9 @@
 syntax = "proto3";
 
 package order;
-option go_package = "./order";
+// option go_package = "github.com/ayorinde-codes/real-time-delivery-tracking/proto/order";
+option go_package = "./proto/order";
+
 
 service OrderService {
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
@@ -11,6 +13,7 @@ service OrderService {
 
 message CreateOrderRequest {
   int32 customer_id = 1;
+  string status = 2;
 }
 
 message CreateOrderResponse {
