@@ -8,9 +8,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/ayorinde-codes/real-time-delivery-tracking/db"
-	"github.com/ayorinde-codes/real-time-delivery-tracking/proto/order"
-	"github.com/ayorinde-codes/real-time-delivery-tracking/proto/tracking"
-	"github.com/ayorinde-codes/real-time-delivery-tracking/proto/user"
 	"github.com/ayorinde-codes/real-time-delivery-tracking/server"
 )
 
@@ -36,13 +33,9 @@ func main() {
 		log.Fatalf("Failed to listen on port %s: %v", port, err)
 	}
 
-	// Create a new gRPC server
+	// Create and configure the gRPC server
 	grpcServer := grpc.NewServer()
-
-	// Register gRPC services
-	order.RegisterOrderServiceServer(grpcServer, &server.OrderServiceServer{DB: db.DB})
-	user.RegisterUserServiceServer(grpcServer, &server.UserServiceServer{DB: db.DB})
-	tracking.RegisterTrackingServiceServer(grpcServer, &server.TrackingServiceServer{DB: db.DB})
+	server.RegisterAllServices(grpcServer, db.DB)
 
 	log.Printf("Server is running on port %s...", port)
 

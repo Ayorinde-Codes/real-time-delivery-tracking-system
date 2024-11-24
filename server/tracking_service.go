@@ -31,9 +31,9 @@ func (s *TrackingServiceServer) SendLocationStream(stream tracking.TrackingServi
 		}
 
 		locationUpdate := models.Tracking{
-			OrderID:   req.OrderId,
-			Latitude:  req.Latitude,
-			Longitude: req.Longitude,
+			OrderID:   uint(req.OrderId),
+			Latitude:  float64(req.Latitude),
+			Longitude: float64(req.Longitude),
 		}
 
 		if result := s.DB.Create(&locationUpdate); result.Error != nil {
@@ -81,9 +81,9 @@ func (s *TrackingServiceServer) SubscribeLocationUpdates(req *tracking.LocationR
 
 	for _, update := range locationUpdates {
 		err := stream.Send(&tracking.LocationResponse{
-			OrderId:   update.OrderID,
-			Latitude:  update.Latitude,
-			Longitude: update.Longitude,
+			OrderId:   int32(update.OrderID),
+			Latitude:  float32(update.Latitude),
+			Longitude: float32(update.Longitude),
 			Message:   "Location update streamed",
 		})
 		if err != nil {
