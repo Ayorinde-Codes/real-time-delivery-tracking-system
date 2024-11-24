@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.28.3
-// source: proto/tracking.proto
+// source: proto/tracking/tracking.proto
 
 package tracking
 
@@ -200,5 +200,5 @@ var TrackingService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/tracking.proto",
+	Metadata: "proto/tracking/tracking.proto",
 }
