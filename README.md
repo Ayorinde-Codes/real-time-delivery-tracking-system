@@ -29,7 +29,9 @@ A backend service for real-time delivery tracking built using GRPC.
    cd real-time-delivery-tracking
    ```
 2. ### Install dependencies:
+    ```bash
     go mod tidy
+    ```
 
 
 3. Start the services with Docker Compose:
